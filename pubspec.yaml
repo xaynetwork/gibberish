@@ -6,12 +6,13 @@ environment:
 
 dependencies:
   http: 0.13.4
-  html: ^0.15.0
 
 dev_dependencies:
   test: ^1.21.1
   # used for reference and benchmark
+  html: 0.15.0
   franc:
     git:
       url: https://github.com/svonidze/francd
       ref: 170e633af9a7b8b31769eb232f99e105e1359692
+
