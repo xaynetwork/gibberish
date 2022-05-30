@@ -1,4 +1,4 @@
-{
+const dutchDictionary = {
   "language": "dutch",
   "totals": 326283,
   "words": {
@@ -1003,4 +1003,4 @@
     "regio": 34,
     "koloniën": 34
   }
-}
+};

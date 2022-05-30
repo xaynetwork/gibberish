@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:gibberish/language.dart';
 import 'package:gibberish/utils.dart';
 
@@ -44,10 +41,9 @@ class Analysis {
 }
 
 class Detector {
-  final String wordSetFile;
-  late final _jsonMap = jsonDecode(File(wordSetFile).readAsStringSync());
+  final Map _dictionary;
 
-  Detector(this.wordSetFile);
+  Detector(this._dictionary);
 
   Analysis analyze(String article) {
     final words = splitArticleInWords(article);
@@ -65,7 +61,7 @@ class Detector {
       throw 'Article does not contain any words';
     }
 
-    final keys = Set.from(_jsonMap['words'].keys);
+    final keys = Set.from(_dictionary['words'].keys);
     final listOfWords = words.toList();
 
     return listOfWords
@@ -85,8 +81,8 @@ class Detector {
         wordDistribution[key] = wordDistribution.putIfAbsent(key, () => 0) + 1);
     final totalWords = words.length;
 
-    final int total = _jsonMap['totals'];
-    final used = Map.fromIterable(_jsonMap['words'].entries,
+    final int total = _dictionary['totals'];
+    final used = Map.fromIterable(_dictionary['words'].entries,
         key: (k) => k.key,
         value: (v) {
           final wordScore = wordDistribution[v.key];
@@ -109,7 +105,7 @@ class Detector {
     }
 
     final wordSet = words.toSet();
-    final hitmap = Map.fromIterable(_jsonMap['words'].keys,
+    final hitmap = Map.fromIterable(_dictionary['words'].keys,
         value: (v) => wordSet.contains(v) ? 1 : 0, key: (k) => k);
     final usedWords = hitmap.values.reduce((value, element) => value + element);
 

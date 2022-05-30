@@ -1,15 +1,21 @@
 import 'package:gibberish/detection.dart';
 import 'package:gibberish/language.dart';
+import 'package:gibberish/results/de.dart';
+import 'package:gibberish/results/en.dart';
+import 'package:gibberish/results/es.dart';
+import 'package:gibberish/results/fr.dart';
+import 'package:gibberish/results/nl.dart';
+import 'package:gibberish/results/pl.dart';
 
 class Detectors {
   Detectors._();
 
-  static late final english = Detector(Language.english.wordSetFile);
-  static late final german = Detector(Language.german.wordSetFile);
-  static late final spanish = Detector(Language.spanish.wordSetFile);
-  static late final french = Detector(Language.french.wordSetFile);
-  static late final dutch = Detector(Language.dutch.wordSetFile);
-  static late final polish = Detector(Language.polish.wordSetFile);
+  static late final english = Detector(englishDictionary);
+  static late final german = Detector(germanDictionary);
+  static late final spanish = Detector(spanishDictionary);
+  static late final french = Detector(frenchDictionary);
+  static late final dutch = Detector(dutchDictionary);
+  static late final polish = Detector(polishDictionary);
 
   static Detection detect(String article) {
     return Detection(Map.fromIterable(Language.values,

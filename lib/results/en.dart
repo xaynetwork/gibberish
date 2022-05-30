@@ -1,4 +1,4 @@
-{
+const englishDictionary = {
   "language": "english",
   "totals": 765500,
   "words": {
@@ -1003,4 +1003,4 @@
     "visual": 99,
     "Entertainment": 98
   }
-}
+};
