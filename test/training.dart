@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:gibberish/language.dart';
-import 'package:gibberish/utils.dart';
+import 'package:gibberish/trigram_utils.dart';
 import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
 
@@ -102,11 +102,28 @@ class CountResult {
 }
 
 void main() async {
-  trainFromWikipedia(Language.polish, getArticleContent);
-  trainFromWikipedia(Language.spanish, getArticleContent);
-  trainFromWikipedia(Language.french, getArticleContent);
-  trainFromWikipedia(Language.dutch, getArticleContent);
-  trainFromWikipedia(Language.german, getArticleContent);
+  // createArticleBlob(Language.french, getArticleContent);
+  final raw = jsonDecode(
+      await File('test/assets/polish_wikipedia_blob.json').readAsString());
+  trainFromWikipedia(Language.polish, (title, lang) async => raw[title]);
+  // trainFromWikipedia(Language.spanish, getArticleContent);
+  // trainFromWikipedia(Language.french, getArticleContent);
+  // trainFromWikipedia(Language.dutch, getArticleContent);
+  // trainFromWikipedia(Language.german, getArticleContent);
+}
+
+Future<void> createArticleBlob(Language language, GetArticle getArticle) async {
+  final articles = <Future<MapEntry<String, String>>>[];
+
+  final topArticles = jsonDecode(await File(language.topviews).readAsString());
+
+  for (var entry in topArticles.take(100)) {
+    final title = entry['article'];
+    articles.add(getArticle(title, language)
+        .then((value) => MapEntry(title, value ?? '')));
+  }
+  final res = await Future.wait(articles);
+  print(jsonEncode(Map.fromEntries(res)));
 }
 
 Future<void> trainFromFile(Language language, String fileName) async {
@@ -160,20 +177,8 @@ Future<int> processArticle(
 }
 
 CountResult countWords(String? article) {
-  final words = <String, int>{};
-  int total = 0;
-  if (article != null) {
-    article = article.replaceFirst(pronunciation, '');
-
-    final allMatches = word.allMatches(article);
-    total = allMatches.length;
-    for (var match in allMatches) {
-      final group = match.group(0);
-      if (group != null) {
-        words[group] = words.putIfAbsent(group, () => 0) + 1;
-      }
-    }
-  }
+  final words = getCleanTrigramsAsDictionary(article ?? '', distance: 4);
+  final total = words.values.reduce((value, element) => value + element);
 
   return CountResult(total, words);
 }

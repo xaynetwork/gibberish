@@ -89,14 +89,79 @@ void main() {
 
   group('Negative:', () {
     test(
-      'At least 55% of Gibberish articles should be detected as gibberish ',
+      'English: Gibberish be detected as gibberish',
       () async {
         await verify(
           Detectors.english,
           () async => jsonDecode(
                   await File('test/assets/gibberish.json').readAsString())
               .entries,
-          quota: lessThanOrEqualTo(0.45),
+          quota: lessThanOrEqualTo(0.43),
+        );
+      },
+    );
+
+    test(
+      'German: Gibberish be detected as gibberish',
+      () async {
+        await verify(
+          Detectors.german,
+          () async => jsonDecode(
+                  await File('test/assets/gibberish.json').readAsString())
+              .entries,
+          quota: lessThanOrEqualTo(0.0),
+        );
+      },
+    );
+
+    test(
+      'Spanish: Gibberish be detected as gibberish',
+      () async {
+        await verify(
+          Detectors.spanish,
+          () async => jsonDecode(
+                  await File('test/assets/gibberish.json').readAsString())
+              .entries,
+          quota: lessThanOrEqualTo(0.0),
+        );
+      },
+    );
+
+    test(
+      'Polish: Gibberish be detected as gibberish',
+      () async {
+        await verify(
+          Detectors.polish,
+          () async => jsonDecode(
+                  await File('test/assets/gibberish.json').readAsString())
+              .entries,
+          quota: lessThanOrEqualTo(0.0),
+        );
+      },
+    );
+
+    test(
+      'Dutch: Gibberish be detected as gibberish',
+      () async {
+        await verify(
+          Detectors.dutch,
+          () async => jsonDecode(
+                  await File('test/assets/gibberish.json').readAsString())
+              .entries,
+          quota: lessThanOrEqualTo(0.0),
+        );
+      },
+    );
+
+    test(
+      'French: Gibberish be detected as gibberish',
+      () async {
+        await verify(
+          Detectors.french,
+          () async => jsonDecode(
+                  await File('test/assets/gibberish.json').readAsString())
+              .entries,
+          quota: lessThanOrEqualTo(0.0),
         );
       },
     );
@@ -135,6 +200,7 @@ Future<void> verify(
 }
 
 final franc = Franc();
+
 Future<void> verifyFranc(
     Detector detector, Future<Iterable<MapEntry>> Function() getEntries,
     {required quota}) async {

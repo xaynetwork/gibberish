@@ -30,7 +30,9 @@ class Analysis {
   });
 
   bool get isGibberish =>
-      totalScore < 0.30 || (distanceScore > 0.03 && words > 30);
+      totalScore < 0.26 ||
+      (distanceScore > 0.006 && words > 100) ||
+      distributionScore < 0.1;
   final double totalScore;
   final double distanceScore;
   final double distributionScore;
@@ -45,13 +47,15 @@ class Detector {
 
   Detector(this._dictionary);
 
-  Analysis analyze(String article) {
-    final words = splitArticleInWords(article);
+  Analysis analyze(String article, {int maxSize = 3600, int gramSize = 4}) {
+    final words = splitArticleInTrigrams(article, gramSize: gramSize)
+        .take(maxSize)
+        .toList();
 
     return Analysis(
       totalScore: _totalScore(words),
       distanceScore: _distanceScore(words),
-      distributionScore: _distributionScore(words),
+      distributionScore: _distributionScore(words) / words.toSet().length,
       words: words.length,
     );
   }
@@ -71,25 +75,27 @@ class Detector {
         listOfWords.length;
   }
 
-  double _distanceScore(List<String> words) {
-    if (words.isEmpty) {
+  double _distanceScore(List<String> input) {
+    if (input.isEmpty) {
       throw 'Article does not contain any words';
     }
 
-    final wordDistribution = <String, int>{};
-    words.forEach((key) =>
-        wordDistribution[key] = wordDistribution.putIfAbsent(key, () => 0) + 1);
-    final totalWords = words.length;
+    final inputDistribution = <String, int>{};
+    input.forEach((key) => inputDistribution[key] =
+        inputDistribution.putIfAbsent(key, () => 0) + 1);
+    final inputsLength = input.length;
 
-    final int total = _dictionary['totals'];
+    final int dictLength = _dictionary['totals'];
     final used = Map.fromIterable(_dictionary['words'].entries,
         key: (k) => k.key,
-        value: (v) {
-          final wordScore = wordDistribution[v.key];
-          if (wordScore == null) {
+        value: (dictEntry) {
+          final inputScore = inputDistribution[dictEntry.key];
+          if (inputScore == null) {
             return null;
           } else {
-            return ((wordScore / totalWords) - v.value / total).abs();
+            return ((inputScore / inputsLength) -
+                    (dictEntry.value / dictLength))
+                .abs();
           }
         });
 
