@@ -29,10 +29,16 @@ class Analysis {
     required this.words,
   });
 
-  bool get isGibberish =>
-      totalScore < 0.26 ||
-      (distanceScore > 0.006 && words > 100) ||
-      distributionScore < 0.1;
+  bool get isGibberish => !textMakesSense;
+
+  bool get textMakesSense =>
+      totalScore > 0.4 ||
+      (totalScore > 0.3 && distanceScore < 0.0011) ||
+      (totalScore > 0.3 && distanceScore < 0.02 && distributionScore > 0.26) ||
+      (totalScore > 0.25 &&
+          distanceScore < 0.003 &&
+          distributionScore > 0.25) ||
+      (totalScore > 0.27 && distanceScore < 0.001 && distributionScore > 0.2);
   final double totalScore;
   final double distanceScore;
   final double distributionScore;
@@ -85,7 +91,6 @@ class Detector {
         inputDistribution.putIfAbsent(key, () => 0) + 1);
     final inputsLength = input.length;
 
-    final int dictLength = _dictionary['totals'];
     final used = Map.fromIterable(_dictionary['words'].entries,
         key: (k) => k.key,
         value: (dictEntry) {
@@ -93,9 +98,7 @@ class Detector {
           if (inputScore == null) {
             return null;
           } else {
-            return ((inputScore / inputsLength) -
-                    (dictEntry.value / dictLength))
-                .abs();
+            return ((inputScore / inputsLength) - dictEntry.value).abs();
           }
         });
 

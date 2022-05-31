@@ -6,6 +6,8 @@ import 'package:gibberish/gibberish.dart';
 import 'package:test/expect.dart';
 import 'package:test/scaffolding.dart';
 
+final defaultSize = 4;
+
 void main() {
   group('Positive: ', () {
     test(
@@ -17,6 +19,7 @@ void main() {
                   .readAsString())['english']
               .entries,
           quota: 1,
+          gramSize: defaultSize,
         );
       },
     );
@@ -30,6 +33,7 @@ void main() {
                   .readAsString())['german']
               .entries,
           quota: 1,
+          gramSize: defaultSize,
         );
       },
     );
@@ -43,6 +47,7 @@ void main() {
                   .readAsString())['polish']
               .entries,
           quota: 1,
+          gramSize: defaultSize,
         );
       },
     );
@@ -56,6 +61,7 @@ void main() {
                   .readAsString())['french']
               .entries,
           quota: 1,
+          gramSize: defaultSize,
         );
       },
     );
@@ -69,6 +75,7 @@ void main() {
                   .readAsString())['dutch']
               .entries,
           quota: 1,
+          gramSize: defaultSize,
         );
       },
     );
@@ -82,6 +89,7 @@ void main() {
                   .readAsString())['spanish']
               .entries,
           quota: 1,
+          gramSize: defaultSize,
         );
       },
     );
@@ -96,7 +104,8 @@ void main() {
           () async => jsonDecode(
                   await File('test/assets/gibberish.json').readAsString())
               .entries,
-          quota: lessThanOrEqualTo(0.43),
+          quota: lessThanOrEqualTo(0.35),
+          gramSize: defaultSize,
         );
       },
     );
@@ -110,6 +119,7 @@ void main() {
                   await File('test/assets/gibberish.json').readAsString())
               .entries,
           quota: lessThanOrEqualTo(0.0),
+          gramSize: defaultSize,
         );
       },
     );
@@ -122,7 +132,8 @@ void main() {
           () async => jsonDecode(
                   await File('test/assets/gibberish.json').readAsString())
               .entries,
-          quota: lessThanOrEqualTo(0.0),
+          quota: lessThanOrEqualTo(0.1),
+          gramSize: defaultSize,
         );
       },
     );
@@ -136,6 +147,7 @@ void main() {
                   await File('test/assets/gibberish.json').readAsString())
               .entries,
           quota: lessThanOrEqualTo(0.0),
+          gramSize: defaultSize,
         );
       },
     );
@@ -149,6 +161,7 @@ void main() {
                   await File('test/assets/gibberish.json').readAsString())
               .entries,
           quota: lessThanOrEqualTo(0.0),
+          gramSize: defaultSize,
         );
       },
     );
@@ -162,6 +175,7 @@ void main() {
                   await File('test/assets/gibberish.json').readAsString())
               .entries,
           quota: lessThanOrEqualTo(0.0),
+          gramSize: defaultSize,
         );
       },
     );
@@ -183,11 +197,11 @@ void main() {
 
 Future<void> verify(
     Detector detector, Future<Iterable<MapEntry>> Function() getEntries,
-    {required quota}) async {
+    {required quota, required int gramSize}) async {
   final entries = await getEntries();
   final res = <Analysis>[];
   for (var article in entries) {
-    final analysis = detector.analyze(article.value);
+    final analysis = detector.analyze(article.value, gramSize: gramSize);
     print("${article.key}: $analysis");
     res.add(analysis);
   }

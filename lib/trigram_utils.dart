@@ -3,8 +3,9 @@
 
 /// Get dictionary with trigrams as its keys,
 /// and their occurrence count as values.
-Map<String, int> getCleanTrigramsAsDictionary(String text, {int distance = 3}) {
-  final List<String> trigrams = getCleanTrigrams(text, distance: distance);
+Map<String, int> getCleanTrigramsAsDictionary(String text,
+    {required int gramSize}) {
+  final List<String> trigrams = getCleanTrigrams(text, distance: gramSize);
   final Map<String, int> dictionary = {};
   trigrams.forEach((element) {
     dictionary.update(element, (occurrence) => occurrence + 1,
@@ -14,7 +15,7 @@ Map<String, int> getCleanTrigramsAsDictionary(String text, {int distance = 3}) {
 }
 
 /// Get clean, padded, trigrams.
-List<String> getCleanTrigrams(String text, {int distance = 3}) {
+List<String> getCleanTrigrams(String text, {required int distance}) {
   return _makeTrigrams(' ' + _clean(text) + ' ', distance);
 }
 
