@@ -104,11 +104,11 @@ class CountResult {
 void main() async {
   // createArticleBlob(Language.french, getArticleContent);
   final size = 4;
-  generateDict(Language.english, 'en', gramSize: 4);
-  generateDict(Language.german, 'de', gramSize: 4);
-  generateDict(Language.dutch, 'nl', gramSize: 4);
-  generateDict(Language.french, 'fr', gramSize: 4);
-  generateDict(Language.spanish, 'es', gramSize: 4);
+  generateDict(Language.english, 'en', gramSize: 4, dictSize: 750);
+  generateDict(Language.german, 'de', gramSize: 4, dictSize: 1000);
+  generateDict(Language.dutch, 'nl', gramSize: 4, dictSize: 1000);
+  generateDict(Language.french, 'fr', gramSize: 4, dictSize: 750);
+  generateDict(Language.spanish, 'es', gramSize: 4, dictSize: 750);
   generateDict(Language.polish, 'pl', gramSize: 4, dictSize: 2000);
   // trainFromWikipedia(Language.spanish, getArticleContent);
   // trainFromWikipedia(Language.french, getArticleContent);
