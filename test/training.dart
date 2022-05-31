@@ -103,17 +103,13 @@ class CountResult {
 
 void main() async {
   // createArticleBlob(Language.french, getArticleContent);
-  final size = 4;
-  generateDict(Language.english, 'en', gramSize: 4);
-  generateDict(Language.german, 'de', gramSize: 4);
-  generateDict(Language.dutch, 'nl', gramSize: 4);
-  generateDict(Language.french, 'fr', gramSize: 4);
-  generateDict(Language.spanish, 'es', gramSize: 4);
-  generateDict(Language.polish, 'pl', gramSize: 4, dictSize: 2000);
-  // trainFromWikipedia(Language.spanish, getArticleContent);
-  // trainFromWikipedia(Language.french, getArticleContent);
-  // trainFromWikipedia(Language.dutch, getArticleContent);
-  // trainFromWikipedia(Language.german, getArticleContent);
+  final size = 3;
+  generateDict(Language.english, 'en', gramSize: size, dictSize: 1000);
+  generateDict(Language.german, 'de', gramSize: size, dictSize: 1000);
+  generateDict(Language.dutch, 'nl', gramSize: size, dictSize: 1000);
+  generateDict(Language.french, 'fr', gramSize: size, dictSize: 1000);
+  generateDict(Language.spanish, 'es', gramSize: size, dictSize: 1000);
+  generateDict(Language.polish, 'pl', gramSize: size, dictSize: 2000);
 }
 
 Future<void> generateDict(Language language, String twoLetter,

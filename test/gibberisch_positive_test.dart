@@ -6,7 +6,7 @@ import 'package:gibberish/gibberish.dart';
 import 'package:test/expect.dart';
 import 'package:test/scaffolding.dart';
 
-final defaultSize = 4;
+final defaultSize = 3;
 
 void main() {
   group('Positive: ', () {
@@ -104,7 +104,7 @@ void main() {
           () async => jsonDecode(
                   await File('test/assets/gibberish.json').readAsString())
               .entries,
-          quota: lessThanOrEqualTo(0.35),
+          quota: lessThanOrEqualTo(0.39),
           gramSize: defaultSize,
         );
       },

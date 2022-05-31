@@ -10,12 +10,12 @@ import 'package:gibberish/results/pl.dart';
 class Detectors {
   Detectors._();
 
-  static late final english = Detector(englishDictionary);
-  static late final german = Detector(germanDictionary);
-  static late final spanish = Detector(spanishDictionary);
-  static late final french = Detector(frenchDictionary);
-  static late final dutch = Detector(dutchDictionary);
-  static late final polish = Detector(polishDictionary);
+  static late final english = Detector(englishDictionary, Language.english);
+  static late final german = Detector(germanDictionary, Language.german);
+  static late final spanish = Detector(spanishDictionary, Language.spanish);
+  static late final french = Detector(frenchDictionary, Language.french);
+  static late final dutch = Detector(dutchDictionary, Language.dutch);
+  static late final polish = Detector(polishDictionary, Language.polish);
 
   static Detection detect(String article) {
     return Detection(Map.fromIterable(Language.values,
