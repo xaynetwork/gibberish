@@ -6,10 +6,12 @@ import 'package:gibberish/gibberish.dart';
 import 'package:test/expect.dart';
 import 'package:test/scaffolding.dart';
 
+import 'training.dart';
+
 void main() async {
   // generate the configs
-  // await Future.wait(train.main());
-  // await Future.delayed(Duration(seconds: 10));
+  await Future.wait(training());
+  await Future.delayed(Duration(seconds: 3));
 
   // verify that the configs full fill our expectation
   group('Positive: ', () {
@@ -101,7 +103,7 @@ void main() async {
           () async => jsonDecode(
                   await File('test/assets/gibberish.json').readAsString())
               .entries,
-          quota: lessThanOrEqualTo(0.41),
+          quota: lessThanOrEqualTo(0.43),
         );
       },
     );
