@@ -26,23 +26,29 @@ class Analysis {
     required this.distanceScore,
     required this.chainedScore,
     required this.words,
-    required this.language,
+    required this.minChainedScore,
+    required this.maxDistanceScore,
   });
 
   bool get isGibberish => !textMakesSense;
 
+  // bool get textMakesSense =>
+  //     (language != Language.polish &&
+  //         chainedScore > 0.0011 &&
+  //         (distanceScore < 0.016)) ||
+  //     (language == Language.polish &&
+  //         chainedScore > 0.00057 &&
+  //         distanceScore < 0.0018);
+
   bool get textMakesSense =>
-      (language != Language.polish &&
-          chainedScore > 0.0011 &&
-          (distanceScore < 0.016 || words < 60)) ||
-      (language == Language.polish &&
-          chainedScore > 0.00057 &&
-          distanceScore < 0.0018);
+      (chainedScore > minChainedScore) && (distanceScore < maxDistanceScore);
 
   final double distanceScore;
   final double chainedScore;
+  final double minChainedScore;
+  final double maxDistanceScore;
+
   final int words;
-  final Language language;
 
   String toString() =>
       "${isGibberish ? '❌' : '✅'} (distance: $distanceScore chained: $chainedScore)";
@@ -50,24 +56,25 @@ class Analysis {
 
 class Detector {
   final Map _dictionary;
-  final Language _language;
 
-  Detector(this._dictionary, this._language);
+  Detector(this._dictionary);
 
-  Analysis analyze(String article, {int maxSize = 3600, int gramSize = 3}) {
-    final words = splitArticleInTrigrams(article, gramSize: gramSize)
-        .take(maxSize)
-        .toList();
+  Analysis analyze(String article, {int maxSize = 3600}) {
+    final words =
+        splitArticleInTrigrams(article, gramSize: _dictionary['gramSize'])
+            .take(maxSize)
+            .toList();
 
     return Analysis(
-      distanceScore: _distanceScore(words),
-      chainedScore: _chainedProbabilityScore(words),
+      distanceScore: distanceScore(words, _dictionary['words']),
+      chainedScore: chainedProbabilityScore(words, _dictionary['words']),
       words: words.length,
-      language: _language,
+      maxDistanceScore: _dictionary["maxDistanceScore"],
+      minChainedScore: _dictionary["minChainedScore"],
     );
   }
 
-  double _distanceScore(List<String> input) {
+  static double distanceScore(List<String> input, Map words) {
     if (input.isEmpty) {
       throw 'Article does not contain any words';
     }
@@ -77,7 +84,7 @@ class Detector {
         inputDistribution.putIfAbsent(key, () => 0) + 1);
     final inputsLength = input.length;
 
-    final used = Map.fromIterable(_dictionary['words'].entries,
+    final used = Map.fromIterable(words.entries,
         key: (k) => k.key,
         value: (dictEntry) {
           final inputScore = inputDistribution[dictEntry.key];
@@ -94,14 +101,14 @@ class Detector {
         : scores.reduce((value, element) => value + element) / scores.length;
   }
 
-  double _chainedProbabilityScore(List<String> words) {
-    if (words.isEmpty) {
+  static double chainedProbabilityScore(List<String> input, Map words) {
+    if (input.isEmpty) {
       throw 'Article does not contain any words';
     }
 
-    var count = words.length;
-    final logProb = words.map((e) {
-      var val = _dictionary['words'][e];
+    var count = input.length;
+    final logProb = input.map((e) {
+      var val = words[e];
       return val ?? 0;
     }).reduce((value, element) => value + element);
 

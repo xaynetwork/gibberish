@@ -2,8 +2,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:gibberish/detection.dart';
 import 'package:gibberish/language.dart';
 import 'package:gibberish/trigram_utils.dart';
+import 'package:gibberish/utils.dart';
 import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
 
@@ -101,15 +103,21 @@ class CountResult {
   CountResult(this.totals, this.counts);
 }
 
-void main() async {
+List<Future> main() {
   // createArticleBlob(Language.french, getArticleContent);
-  final size = 3;
-  generateDict(Language.english, 'en', gramSize: size, dictSize: 1000);
-  generateDict(Language.german, 'de', gramSize: size, dictSize: 1000);
-  generateDict(Language.dutch, 'nl', gramSize: size, dictSize: 1000);
-  generateDict(Language.french, 'fr', gramSize: size, dictSize: 1000);
-  generateDict(Language.spanish, 'es', gramSize: size, dictSize: 1000);
-  generateDict(Language.polish, 'pl', gramSize: size, dictSize: 2000);
+  final gramSize = 3;
+  final dictSize = 750;
+  final res = [
+    generateDict(Language.english, 'en',
+        gramSize: gramSize, dictSize: dictSize),
+    generateDict(Language.german, 'de', gramSize: gramSize, dictSize: dictSize),
+    generateDict(Language.dutch, 'nl', gramSize: gramSize, dictSize: dictSize),
+    generateDict(Language.french, 'fr', gramSize: gramSize, dictSize: dictSize),
+    generateDict(Language.spanish, 'es',
+        gramSize: gramSize, dictSize: dictSize),
+    generateDict(Language.polish, 'pl', gramSize: gramSize, dictSize: dictSize),
+  ];
+  return res;
 }
 
 Future<void> generateDict(Language language, String twoLetter,
@@ -179,11 +187,55 @@ Future<String> trainFromWikipedia(Language language, GetArticle getArticle,
 
   var list = totals.entries.toList();
   list.sort((a, b) => b.value.compareTo(a.value));
+  final words = Map.fromEntries(
+      list.take(dictSize).map((e) => MapEntry(e.key, e.value / totalWords)));
+
+  final positives = jsonDecode(
+          await File('test/assets/articles.json').readAsString())[language.name]
+      as Map;
+  final negatives =
+      jsonDecode(await File('test/assets/gibberish.json').readAsString())
+          as Map;
+
+  List<String> split(dynamic article) =>
+      splitArticleInTrigrams(article, gramSize: gramSize).toList();
+
+  /// searching for min distance
+  final positiveDistance = _max(
+      positives.values.map(split).map((e) => Detector.distanceScore(e, words)));
+  final negativeDistance = _min(
+      negatives.values.map(split).map((e) => Detector.distanceScore(e, words)));
+
+  /// searching for max chained score
+  final positiveChained = _min(positives.values
+      .map(split)
+      .map((e) => Detector.chainedProbabilityScore(e, words)));
+  final negativeChained = _max(negatives.values
+      .map(split)
+      .map((e) => Detector.chainedProbabilityScore(e, words)));
+
   return jsonEncode({
     'language': language.name,
-    'words': Map.fromEntries(
-        list.take(dictSize).map((e) => MapEntry(e.key, e.value / totalWords))),
+    'gramSize': gramSize,
+    'maxDistanceScore':
+        // adding paddings to allow for cases that we havn't trained
+        positiveDistance + (positiveDistance - negativeDistance).abs() / 30,
+    'minChainedScore':
+        positiveChained - (positiveChained - negativeChained).abs() / 30,
+    'words': words,
   });
+}
+
+double _min(Iterable<double> l) {
+  final list = l.toList();
+  list.sort();
+  return list.first;
+}
+
+double _max(Iterable<double> l) {
+  final list = l.toList();
+  list.sort();
+  return list.last;
 }
 
 Future<int> processArticle(
