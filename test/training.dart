@@ -2,7 +2,9 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:gibberish/detection.dart';
 import 'package:gibberish/language.dart';
+import 'package:gibberish/trigram_utils.dart';
 import 'package:gibberish/utils.dart';
 import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
@@ -101,19 +103,63 @@ class CountResult {
   CountResult(this.totals, this.counts);
 }
 
-void main() async {
-  trainFromWikipedia(Language.polish, getArticleContent);
-  trainFromWikipedia(Language.spanish, getArticleContent);
-  trainFromWikipedia(Language.french, getArticleContent);
-  trainFromWikipedia(Language.dutch, getArticleContent);
-  trainFromWikipedia(Language.german, getArticleContent);
+List<Future> main() {
+  // createArticleBlob(Language.french, getArticleContent);
+  final gramSize = 3;
+  final dictSize = 750;
+  final res = [
+    generateDict(Language.english, 'en',
+        gramSize: gramSize, dictSize: dictSize),
+    generateDict(Language.german, 'de', gramSize: gramSize, dictSize: dictSize),
+    generateDict(Language.dutch, 'nl', gramSize: gramSize, dictSize: dictSize),
+    generateDict(Language.french, 'fr', gramSize: gramSize, dictSize: dictSize),
+    generateDict(Language.spanish, 'es',
+        gramSize: gramSize, dictSize: dictSize),
+    generateDict(Language.polish, 'pl', gramSize: gramSize, dictSize: dictSize),
+  ];
+  return res;
 }
 
-Future<void> trainFromFile(Language language, String fileName) async {
+Future<void> generateDict(Language language, String twoLetter,
+    {required int gramSize, int dictSize = 1000}) async {
+  final raw = jsonDecode(
+      await File('test/assets/${language.name}_wikipedia_blob.json')
+          .readAsString());
+  trainFromWikipedia(
+    language,
+    (title, lang) async => raw[title],
+    gramSize: gramSize,
+    dictSize: dictSize,
+  ).then((value) => writeToFile(
+        'const ${language.name}Dictionary = $value;',
+        'lib/results/$twoLetter.dart',
+      ));
+}
+
+Future<void> writeToFile(String text, String fileName) async =>
+    await File(fileName).writeAsString(text);
+
+Future<void> createArticleBlob(Language language, GetArticle getArticle) async {
+  final articles = <Future<MapEntry<String, String>>>[];
+
+  final topArticles = jsonDecode(await File(language.topviews).readAsString());
+
+  for (var entry in topArticles.take(100)) {
+    final title = entry['article'];
+    articles.add(getArticle(title, language)
+        .then((value) => MapEntry(title, value ?? '')));
+  }
+  final res = await Future.wait(articles);
+  print(jsonEncode(Map.fromEntries(res)));
+}
+
+Future<void> trainFromFile(Language language, String fileName,
+    {required int gramSize}) async {
   final totals = <String, int>{};
 
-  final totalWords =
-      await processArticle(() => File(fileName).readAsString(), totals);
+  final totalWords = await processArticle(
+      () => File(fileName).readAsString(), totals,
+      gramSize: gramSize);
 
   var list = totals.entries.toList();
   list.sort((a, b) => b.value.compareTo(a.value));
@@ -124,8 +170,8 @@ Future<void> trainFromFile(Language language, String fileName) async {
   }));
 }
 
-Future<void> trainFromWikipedia(
-    Language language, GetArticle getArticle) async {
+Future<String> trainFromWikipedia(Language language, GetArticle getArticle,
+    {required int gramSize, required int dictSize}) async {
   final totals = <String, int>{};
   var totalWords = 0;
 
@@ -134,24 +180,70 @@ Future<void> trainFromWikipedia(
   for (var entry in topArticles.take(100)) {
     final title = entry['article'];
     print(title);
-    totalWords +=
-        await processArticle(() => getArticle(title, language), totals);
+    totalWords += await processArticle(
+        () => getArticle(title, language), totals,
+        gramSize: gramSize);
   }
 
   var list = totals.entries.toList();
   list.sort((a, b) => b.value.compareTo(a.value));
-  print(jsonEncode({
+  final words = Map.fromEntries(
+      list.take(dictSize).map((e) => MapEntry(e.key, e.value / totalWords)));
+
+  final positives = jsonDecode(
+          await File('test/assets/articles.json').readAsString())[language.name]
+      as Map;
+  final negatives =
+      jsonDecode(await File('test/assets/gibberish.json').readAsString())
+          as Map;
+
+  List<String> split(dynamic article) =>
+      splitArticleInTrigrams(article, gramSize: gramSize).toList();
+
+  /// searching for min distance
+  final positiveDistance = _max(
+      positives.values.map(split).map((e) => Detector.distanceScore(e, words)));
+  final negativeDistance = _min(
+      negatives.values.map(split).map((e) => Detector.distanceScore(e, words)));
+
+  /// searching for max chained score
+  final positiveChained = _min(positives.values
+      .map(split)
+      .map((e) => Detector.chainedProbabilityScore(e, words)));
+  final negativeChained = _max(negatives.values
+      .map(split)
+      .map((e) => Detector.chainedProbabilityScore(e, words)));
+
+  return jsonEncode({
     'language': language.name,
-    'totals': totalWords,
-    'words': Map.fromEntries(list.take(1000)),
-  }));
+    'gramSize': gramSize,
+    'maxDistanceScore':
+        // adding paddings to allow for cases that we havn't trained
+        positiveDistance + (positiveDistance - negativeDistance).abs() / 30,
+    'minChainedScore':
+        positiveChained - (positiveChained - negativeChained).abs() / 30,
+    'words': words,
+  });
+}
+
+double _min(Iterable<double> l) {
+  final list = l.toList();
+  list.sort();
+  return list.first;
+}
+
+double _max(Iterable<double> l) {
+  final list = l.toList();
+  list.sort();
+  return list.last;
 }
 
 Future<int> processArticle(
-    Future<String?> Function() getArticle, Map<String, int> totals) async {
+    Future<String?> Function() getArticle, Map<String, int> totals,
+    {required int gramSize}) async {
   final article = await getArticle();
 
-  final result = countWords(article);
+  final result = countWords(article, gramSize: gramSize);
   result.counts.forEach((key, value) {
     final count = totals.putIfAbsent(key, () => 0);
     totals[key] = count + value;
@@ -159,21 +251,9 @@ Future<int> processArticle(
   return result.totals;
 }
 
-CountResult countWords(String? article) {
-  final words = <String, int>{};
-  int total = 0;
-  if (article != null) {
-    article = article.replaceFirst(pronunciation, '');
-
-    final allMatches = word.allMatches(article);
-    total = allMatches.length;
-    for (var match in allMatches) {
-      final group = match.group(0);
-      if (group != null) {
-        words[group] = words.putIfAbsent(group, () => 0) + 1;
-      }
-    }
-  }
+CountResult countWords(String? article, {required int gramSize}) {
+  final words = getCleanTrigramsAsDictionary(article ?? '', gramSize: gramSize);
+  final total = words.values.reduce((value, element) => value + element);
 
   return CountResult(total, words);
 }

@@ -16,28 +16,42 @@ class Detection {
   MapEntry<Language, Analysis>? _findLanguage() {
     final list =
         results.entries.where((element) => !element.value.isGibberish).toList();
-    list.sort((a, b) => b.value.totalScore.compareTo(a.value.totalScore));
+    list.sort((a, b) => b.value.distanceScore.compareTo(a.value.chainedScore));
     return list.isEmpty ? null : list.first;
   }
 }
 
 class Analysis {
   Analysis({
-    required this.totalScore,
     required this.distanceScore,
-    required this.distributionScore,
+    required this.chainedScore,
     required this.words,
+    required this.minChainedScore,
+    required this.maxDistanceScore,
   });
 
-  bool get isGibberish =>
-      totalScore < 0.30 || (distanceScore > 0.03 && words > 30);
-  final double totalScore;
+  bool get isGibberish => !textMakesSense;
+
+  // bool get textMakesSense =>
+  //     (language != Language.polish &&
+  //         chainedScore > 0.0011 &&
+  //         (distanceScore < 0.016)) ||
+  //     (language == Language.polish &&
+  //         chainedScore > 0.00057 &&
+  //         distanceScore < 0.0018);
+
+  bool get textMakesSense =>
+      (chainedScore > minChainedScore) && (distanceScore < maxDistanceScore);
+
   final double distanceScore;
-  final double distributionScore;
+  final double chainedScore;
+  final double minChainedScore;
+  final double maxDistanceScore;
+
   final int words;
 
   String toString() =>
-      "${isGibberish ? '❌' : '✅'} (total: $totalScore distance: $distanceScore, distribution: $distributionScore )";
+      "${isGibberish ? '❌' : '✅'} (distance: $distanceScore chained: $chainedScore)";
 }
 
 class Detector {
@@ -45,51 +59,39 @@ class Detector {
 
   Detector(this._dictionary);
 
-  Analysis analyze(String article) {
-    final words = splitArticleInWords(article);
+  Analysis analyze(String article, {int maxSize = 3600}) {
+    final words =
+        splitArticleInTrigrams(article, gramSize: _dictionary['gramSize'])
+            .take(maxSize)
+            .toList();
 
     return Analysis(
-      totalScore: _totalScore(words),
-      distanceScore: _distanceScore(words),
-      distributionScore: _distributionScore(words),
+      distanceScore: distanceScore(words, _dictionary['words']),
+      chainedScore: chainedProbabilityScore(words, _dictionary['words']),
       words: words.length,
+      maxDistanceScore: _dictionary["maxDistanceScore"],
+      minChainedScore: _dictionary["minChainedScore"],
     );
   }
 
-  double _totalScore(List<String> words) {
-    if (words.isEmpty) {
+  static double distanceScore(List<String> input, Map words) {
+    if (input.isEmpty) {
       throw 'Article does not contain any words';
     }
 
-    final keys = Set.from(_dictionary['words'].keys);
-    final listOfWords = words.toList();
+    final inputDistribution = <String, int>{};
+    input.forEach((key) => inputDistribution[key] =
+        inputDistribution.putIfAbsent(key, () => 0) + 1);
+    final inputsLength = input.length;
 
-    return listOfWords
-            .where((element) => keys.contains(element))
-            .toList()
-            .length /
-        listOfWords.length;
-  }
-
-  double _distanceScore(List<String> words) {
-    if (words.isEmpty) {
-      throw 'Article does not contain any words';
-    }
-
-    final wordDistribution = <String, int>{};
-    words.forEach((key) =>
-        wordDistribution[key] = wordDistribution.putIfAbsent(key, () => 0) + 1);
-    final totalWords = words.length;
-
-    final int total = _dictionary['totals'];
-    final used = Map.fromIterable(_dictionary['words'].entries,
+    final used = Map.fromIterable(words.entries,
         key: (k) => k.key,
-        value: (v) {
-          final wordScore = wordDistribution[v.key];
-          if (wordScore == null) {
+        value: (dictEntry) {
+          final inputScore = inputDistribution[dictEntry.key];
+          if (inputScore == null) {
             return null;
           } else {
-            return ((wordScore / totalWords) - v.value / total).abs();
+            return ((inputScore / inputsLength) - dictEntry.value).abs();
           }
         });
 
@@ -99,16 +101,17 @@ class Detector {
         : scores.reduce((value, element) => value + element) / scores.length;
   }
 
-  double _distributionScore(List<String> words) {
-    if (words.isEmpty) {
+  static double chainedProbabilityScore(List<String> input, Map words) {
+    if (input.isEmpty) {
       throw 'Article does not contain any words';
     }
 
-    final wordSet = words.toSet();
-    final hitmap = Map.fromIterable(_dictionary['words'].keys,
-        value: (v) => wordSet.contains(v) ? 1 : 0, key: (k) => k);
-    final usedWords = hitmap.values.reduce((value, element) => value + element);
+    var count = input.length;
+    final logProb = input.map((e) {
+      var val = words[e];
+      return val ?? 0;
+    }).reduce((value, element) => value + element);
 
-    return usedWords.toDouble();
+    return count == 0 || logProb == 0 ? 0 : logProb / count;
   }
 }
