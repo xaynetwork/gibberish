@@ -103,7 +103,7 @@ class CountResult {
   CountResult(this.totals, this.counts);
 }
 
-List<Future> main() {
+List<Future> training() {
   // createArticleBlob(Language.french, getArticleContent);
   final gramSize = 3;
   final dictSize = 750;
@@ -219,9 +219,10 @@ Future<String> trainFromWikipedia(Language language, GetArticle getArticle,
     'gramSize': gramSize,
     'maxDistanceScore':
         // adding paddings to allow for cases that we havn't trained
-        positiveDistance + (positiveDistance - negativeDistance).abs() / 30,
+        // TODO determine the padding automatically
+        positiveDistance + (positiveDistance - negativeDistance).abs() / 12,
     'minChainedScore':
-        positiveChained - (positiveChained - negativeChained).abs() / 30,
+        positiveChained - (positiveChained - negativeChained).abs() / 12,
     'words': words,
   });
 }
