@@ -1,6 +1,7 @@
 /// List top rated projects
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:gibberish/detection.dart';
 import 'package:gibberish/language.dart';
@@ -103,6 +104,10 @@ class CountResult {
   CountResult(this.totals, this.counts);
 }
 
+void main() async {
+  await Future.wait(training());
+}
+
 List<Future> training() {
   // createArticleBlob(Language.french, getArticleContent);
   final gramSize = 3;
@@ -201,28 +206,45 @@ Future<String> trainFromWikipedia(Language language, GetArticle getArticle,
       splitArticleInTrigrams(article, gramSize: gramSize).toList();
 
   /// searching for min distance
-  final positiveDistance = _max(
-      positives.values.map(split).map((e) => Detector.distanceScore(e, words)));
-  final negativeDistance = _min(
-      negatives.values.map(split).map((e) => Detector.distanceScore(e, words)));
+  var map =
+      positives.values.map(split).map((e) => Detector.distanceScore(e, words));
+  final positiveDistance = _max(map);
+  final positiveDistanceAvr = _avr(map);
+  map =
+      negatives.values.map(split).map((e) => Detector.distanceScore(e, words));
+  final negativeDistance = _min(map);
+  final negativeDistanceAvr = _avr(map);
 
   /// searching for max chained score
-  final positiveChained = _min(positives.values
+  map = positives.values
       .map(split)
-      .map((e) => Detector.chainedProbabilityScore(e, words)));
-  final negativeChained = _max(negatives.values
+      .map((e) => Detector.chainedProbabilityScore(e, words));
+  final positiveChained = _min(map);
+  final positiveChainedAvr = _avr(map);
+
+  map = negatives.values
       .map(split)
-      .map((e) => Detector.chainedProbabilityScore(e, words)));
+      .map((e) => Detector.chainedProbabilityScore(e, words));
+  final negativeChained = _max(map);
+  final negativeChainedAvr = _avr(map);
+
+  // The padding gives the calculated values some room for unknown inputs
+  final paddingMultiplierChained =
+      pow(2.2, log((positiveChainedAvr - negativeChainedAvr).abs()) / log(10));
+
+  final paddingMultiplierDistance = pow(
+      2.2, log((positiveDistanceAvr - negativeDistanceAvr).abs()) / log(10));
+
+  final chainedPadding =
+      (positiveChained - negativeChained).abs() * paddingMultiplierChained;
+  final distancePadding =
+      (positiveDistance - negativeDistance).abs() * paddingMultiplierDistance;
 
   return jsonEncode({
     'language': language.name,
     'gramSize': gramSize,
-    'maxDistanceScore':
-        // adding paddings to allow for cases that we havn't trained
-        // TODO determine the padding automatically
-        positiveDistance + (positiveDistance - negativeDistance).abs() / 12,
-    'minChainedScore':
-        positiveChained - (positiveChained - negativeChained).abs() / 12,
+    'maxDistanceScore': positiveDistance + distancePadding,
+    'minChainedScore': positiveChained - chainedPadding,
     'words': words,
   });
 }
@@ -238,6 +260,9 @@ double _max(Iterable<double> l) {
   list.sort();
   return list.last;
 }
+
+double _avr(Iterable<double> l) =>
+    l.isEmpty ? 0 : l.reduce((value, element) => value + element) / l.length;
 
 Future<int> processArticle(
     Future<String?> Function() getArticle, Map<String, int> totals,

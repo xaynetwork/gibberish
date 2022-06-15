@@ -1,8 +1,8 @@
 const polishDictionary = {
   "language": "polish",
   "gramSize": 3,
-  "maxDistanceScore": 0.0017876526280131383,
-  "minChainedScore": 0.0005232060946117545,
+  "maxDistanceScore": 0.0019310655632776815,
+  "minChainedScore": 0.0005235379856111528,
   "words": {
     "ie ": 0.006685111956433187,
     "nie": 0.00585319387608024,

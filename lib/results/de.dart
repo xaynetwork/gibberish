@@ -1,8 +1,8 @@
 const germanDictionary = {
   "language": "german",
   "gramSize": 3,
-  "maxDistanceScore": 0.0059903607973661125,
-  "minChainedScore": 0.0011310751992094415,
+  "maxDistanceScore": 0.00611044013644332,
+  "minChainedScore": 0.0011267801374939446,
   "words": {
     "en ": 0.021599427285713818,
     "er ": 0.013703379427931577,

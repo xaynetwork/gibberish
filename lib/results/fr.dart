@@ -1,8 +1,8 @@
 const frenchDictionary = {
   "language": "french",
   "gramSize": 3,
-  "maxDistanceScore": 0.0009430723440229719,
-  "minChainedScore": 0.0015101435051588616,
+  "maxDistanceScore": 0.0009539038347689476,
+  "minChainedScore": 0.0014997412240582032,
   "words": {
     " de": 0.013861256240683758,
     "es ": 0.012533543517510246,
