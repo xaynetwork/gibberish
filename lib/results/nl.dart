@@ -1,8 +1,8 @@
 const dutchDictionary = {
   "language": "dutch",
   "gramSize": 3,
-  "maxDistanceScore": 0.0019443113061999554,
-  "minChainedScore": 0.0015981825019581637,
+  "maxDistanceScore": 0.0020053737441890805,
+  "minChainedScore": 0.0015837372453978897,
   "words": {
     "en ": 0.02499303838530938,
     "de ": 0.0141468667443546,
