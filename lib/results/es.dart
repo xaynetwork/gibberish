@@ -1,8 +1,8 @@
 const spanishDictionary = {
   "language": "spanish",
   "gramSize": 3,
-  "maxDistanceScore": 0.001388144592534172,
-  "minChainedScore": 0.0011544097373161319,
+  "maxDistanceScore": 0.001565641526696433,
+  "minChainedScore": 0.0011544799192895563,
   "words": {
     " de": 0.018105830907699204,
     "de ": 0.01390398938842151,
