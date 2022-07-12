@@ -7,8 +7,8 @@ import 'package:gibberish/detection.dart';
 import 'package:gibberish/language.dart';
 import 'package:gibberish/trigram_utils.dart';
 import 'package:gibberish/utils.dart';
-import 'package:html/parser.dart';
-import 'package:http/http.dart' as http;
+
+import 'fetch_blob.dart';
 
 // the pronunciation block that wikipedia uses: [ˈiːlɒn ˈɹiːv ˈmʌsk]
 final pronunciation = RegExp(r"\[.+\]");
@@ -16,7 +16,18 @@ final quote = RegExp(r"\[\d+\]");
 final curlies = RegExp(r"{.*}");
 final template = RegExp(r"\.[a-z-]+");
 
-extension on Language {
+void main() async {
+  await Future.wait(training());
+}
+
+Iterable<Future> training() {
+  // createArticleBlob(Language.french, getArticleContent);
+
+  return Language.values
+      .map((e) => generateDict(e, gramSize: kGramSize, dictSize: kDictSize));
+}
+
+extension LanguageExtension on Language {
   String get project {
     switch (this) {
       case Language.eng:
@@ -31,39 +42,14 @@ extension on Language {
         return 'pl.wikipedia.org';
       case Language.esp:
         return 'es.wikipedia.org';
+      case Language.ukr:
+        return 'uk.wikipedia.org';
+      case Language.ita:
+        return 'it.wikipedia.org';
     }
   }
 
   String get topviews => 'assets/topviews/${name}.json';
-}
-
-typedef GetArticle = Future<String?> Function(String title, Language language);
-
-Future<String?> getArticleExtract(String name, Language languages) async {
-  final response = await http.get(Uri.parse(
-      'https://${languages.project}/w/api.php?action=query&prop=extracts&exsentences=10&exlimit=1&titles=$name&explaintext=1&formatversion=2&format=json'));
-  if (response.statusCode == 200) {
-    return jsonDecode(response.body)['query']['pages'][0]['extract'];
-  } else {
-    return null;
-  }
-}
-
-Future<String?> getArticleContent(String name, Language language) async {
-  final response = await http.get(Uri.parse(
-      'https://${language.project}/w/api.php?action=parse&page=$name&prop=text&format=json'));
-  if (response.statusCode == 200) {
-    final html = parse(jsonDecode(response.body)['parse']['text']['*']);
-    final list = html.querySelectorAll('p');
-    final text =
-        list.map((e) => e.text).reduce((value, element) => element + value);
-    return text
-        .replaceAll(quote, '')
-        .replaceAll(template, '')
-        .replaceAll(curlies, '');
-  } else {
-    return null;
-  }
 }
 
 class Count implements Comparable<Count> {
@@ -88,17 +74,6 @@ class CountResult {
   CountResult(this.totals, this.counts);
 }
 
-void main() async {
-  await Future.wait(training());
-}
-
-Iterable<Future> training() {
-  // createArticleBlob(Language.french, getArticleContent);
-
-  return Language.values
-      .map((e) => generateDict(e, gramSize: kGramSize, dictSize: kDictSize));
-}
-
 Future<void> generateDict(Language language,
     {required int gramSize, int dictSize = 1000}) async {
   final raw = jsonDecode(
@@ -116,20 +91,6 @@ Future<void> generateDict(Language language,
 
 Future<void> writeToFile(String text, String fileName) async =>
     await File(fileName).writeAsString(text);
-
-Future<void> createArticleBlob(Language language, GetArticle getArticle) async {
-  final articles = <Future<MapEntry<String, String>>>[];
-
-  final topArticles = jsonDecode(await File(language.topviews).readAsString());
-
-  for (var entry in topArticles.take(100)) {
-    final title = entry['article'];
-    articles.add(getArticle(title, language)
-        .then((value) => MapEntry(title, value ?? '')));
-  }
-  final res = await Future.wait(articles);
-  print(jsonEncode(Map.fromEntries(res)));
-}
 
 Future<void> trainFromFile(Language language, String fileName,
     {required int gramSize}) async {
@@ -178,25 +139,33 @@ Future<String> trainFromWikipedia(Language language, GetArticle getArticle,
   List<String> split(dynamic article) =>
       splitArticleInTrigrams(article, gramSize: gramSize).toList();
 
+  bool isNotEmpty(List list) => list.isNotEmpty;
+
   /// searching for min distance
-  var map =
-      positives.values.map(split).map((e) => Detector.distanceScore(e, words));
+  var map = positives.values
+      .map(split)
+      .where(isNotEmpty)
+      .map((e) => Detector.distanceScore(e, words));
   final positiveDistance = _max(map);
   final positiveDistanceAvr = _avr(map);
-  map =
-      negatives.values.map(split).map((e) => Detector.distanceScore(e, words));
+  map = negatives.values
+      .map(split)
+      .where(isNotEmpty)
+      .map((e) => Detector.distanceScore(e, words));
   final negativeDistance = _min(map);
   final negativeDistanceAvr = _avr(map);
 
   /// searching for max chained score
   map = positives.values
       .map(split)
+      .where(isNotEmpty)
       .map((e) => Detector.chainedProbabilityScore(e, words));
   final positiveChained = _min(map);
   final positiveChainedAvr = _avr(map);
 
   map = negatives.values
       .map(split)
+      .where(isNotEmpty)
       .map((e) => Detector.chainedProbabilityScore(e, words));
   final negativeChained = _max(map);
   final negativeChainedAvr = _avr(map);
@@ -252,6 +221,7 @@ Future<int> processArticle(
 
 CountResult countWords(String? article, {required int gramSize}) {
   final words = getCleanTrigramsAsDictionary(article ?? '', gramSize: gramSize);
+  if (words.isEmpty) return CountResult(0, {});
   final total = words.values.reduce((value, element) => value + element);
 
   return CountResult(total, words);
