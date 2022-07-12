@@ -14,8 +14,8 @@ void main() async {
       () async {
         await verify(
           Detectors.english,
-          () async => jsonDecode(await File('test/assets/articles.json')
-                  .readAsString())['english']
+          () async => jsonDecode(
+                  await File('assets/articles.json').readAsString())['english']
               .entries,
           quota: 1,
         );
@@ -27,8 +27,8 @@ void main() async {
       () async {
         await verify(
           Detectors.german,
-          () async => jsonDecode(await File('test/assets/articles.json')
-                  .readAsString())['german']
+          () async => jsonDecode(
+                  await File('assets/articles.json').readAsString())['german']
               .entries,
           quota: 1,
         );
@@ -40,8 +40,8 @@ void main() async {
       () async {
         await verify(
           Detectors.polish,
-          () async => jsonDecode(await File('test/assets/articles.json')
-                  .readAsString())['polish']
+          () async => jsonDecode(
+                  await File('assets/articles.json').readAsString())['polish']
               .entries,
           quota: 1,
         );
@@ -53,8 +53,8 @@ void main() async {
       () async {
         await verify(
           Detectors.french,
-          () async => jsonDecode(await File('test/assets/articles.json')
-                  .readAsString())['french']
+          () async => jsonDecode(
+                  await File('assets/articles.json').readAsString())['french']
               .entries,
           quota: 1,
         );
@@ -66,8 +66,8 @@ void main() async {
       () async {
         await verify(
           Detectors.dutch,
-          () async => jsonDecode(await File('test/assets/articles.json')
-                  .readAsString())['dutch']
+          () async => jsonDecode(
+                  await File('assets/articles.json').readAsString())['dutch']
               .entries,
           quota: 1,
         );
@@ -79,8 +79,8 @@ void main() async {
       () async {
         await verify(
           Detectors.spanish,
-          () async => jsonDecode(await File('test/assets/articles.json')
-                  .readAsString())['spanish']
+          () async => jsonDecode(
+                  await File('assets/articles.json').readAsString())['spanish']
               .entries,
           quota: 1,
         );
@@ -94,9 +94,9 @@ void main() async {
       () async {
         await verify(
           Detectors.english,
-          () async => jsonDecode(
-                  await File('test/assets/gibberish.json').readAsString())
-              .entries,
+          () async =>
+              jsonDecode(await File('assets/gibberish.json').readAsString())
+                  .entries,
           quota: lessThanOrEqualTo(0.43),
         );
       },
@@ -107,9 +107,9 @@ void main() async {
       () async {
         await verify(
           Detectors.german,
-          () async => jsonDecode(
-                  await File('test/assets/gibberish.json').readAsString())
-              .entries,
+          () async =>
+              jsonDecode(await File('assets/gibberish.json').readAsString())
+                  .entries,
           quota: lessThanOrEqualTo(0.0),
         );
       },
@@ -120,9 +120,9 @@ void main() async {
       () async {
         await verify(
           Detectors.spanish,
-          () async => jsonDecode(
-                  await File('test/assets/gibberish.json').readAsString())
-              .entries,
+          () async =>
+              jsonDecode(await File('assets/gibberish.json').readAsString())
+                  .entries,
           quota: lessThanOrEqualTo(0.1),
         );
       },
@@ -133,9 +133,9 @@ void main() async {
       () async {
         await verify(
           Detectors.polish,
-          () async => jsonDecode(
-                  await File('test/assets/gibberish.json').readAsString())
-              .entries,
+          () async =>
+              jsonDecode(await File('assets/gibberish.json').readAsString())
+                  .entries,
           quota: lessThanOrEqualTo(0.0),
         );
       },
@@ -146,9 +146,9 @@ void main() async {
       () async {
         await verify(
           Detectors.dutch,
-          () async => jsonDecode(
-                  await File('test/assets/gibberish.json').readAsString())
-              .entries,
+          () async =>
+              jsonDecode(await File('assets/gibberish.json').readAsString())
+                  .entries,
           quota: lessThanOrEqualTo(0.0),
         );
       },
@@ -159,9 +159,9 @@ void main() async {
       () async {
         await verify(
           Detectors.french,
-          () async => jsonDecode(
-                  await File('test/assets/gibberish.json').readAsString())
-              .entries,
+          () async =>
+              jsonDecode(await File('assets/gibberish.json').readAsString())
+                  .entries,
           quota: lessThanOrEqualTo(0.0),
         );
       },
@@ -172,9 +172,9 @@ void main() async {
       () async {
         await verifyFranc(
           Detectors.english,
-          () async => jsonDecode(
-                  await File('test/assets/gibberish.json').readAsString())
-              .entries,
+          () async =>
+              jsonDecode(await File('assets/gibberish.json').readAsString())
+                  .entries,
           quota: lessThanOrEqualTo(1),
         );
       },
