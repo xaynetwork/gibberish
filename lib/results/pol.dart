@@ -1,5 +1,5 @@
-const polishDictionary = {
-  "language": "polish",
+const polDictionary = {
+  "language": "pol",
   "gramSize": 3,
   "maxDistanceScore": 0.0019310655632776815,
   "minChainedScore": 0.0005235379856111528,
