@@ -38,17 +38,17 @@ extension on Language {
   String get topviews {
     switch (this) {
       case Language.english:
-        return 'test/assets/topviews/en-topviews-2021.json';
+        return 'assets/topviews/en-topviews-2021.json';
       case Language.german:
-        return 'test/assets/topviews/de-topviews-2021.json';
+        return 'assets/topviews/de-topviews-2021.json';
       case Language.dutch:
-        return 'test/assets/topviews/nl-topviews-2021.json';
+        return 'assets/topviews/nl-topviews-2021.json';
       case Language.french:
-        return 'test/assets/topviews/fr-topviews-2021.json';
+        return 'assets/topviews/fr-topviews-2021.json';
       case Language.polish:
-        return 'test/assets/topviews/pl-topviews-2021.json';
+        return 'assets/topviews/pl-topviews-2021.json';
       case Language.spanish:
-        return 'test/assets/topviews/es-topviews-2021.json';
+        return 'assets/topviews/es-topviews-2021.json';
     }
   }
 }
@@ -128,8 +128,7 @@ List<Future> training() {
 Future<void> generateDict(Language language, String twoLetter,
     {required int gramSize, int dictSize = 1000}) async {
   final raw = jsonDecode(
-      await File('test/assets/${language.name}_wikipedia_blob.json')
-          .readAsString());
+      await File('assets/${language.name}_wikipedia_blob.json').readAsString());
   trainFromWikipedia(
     language,
     (title, lang) async => raw[title],
@@ -196,11 +195,9 @@ Future<String> trainFromWikipedia(Language language, GetArticle getArticle,
       list.take(dictSize).map((e) => MapEntry(e.key, e.value / totalWords)));
 
   final positives = jsonDecode(
-          await File('test/assets/articles.json').readAsString())[language.name]
-      as Map;
+      await File('assets/articles.json').readAsString())[language.name] as Map;
   final negatives =
-      jsonDecode(await File('test/assets/gibberish.json').readAsString())
-          as Map;
+      jsonDecode(await File('assets/gibberish.json').readAsString()) as Map;
 
   List<String> split(dynamic article) =>
       splitArticleInTrigrams(article, gramSize: gramSize).toList();
