@@ -1,3 +1,12 @@
+gramSize: 3
+dictSize: 750
+# in order to generate a language it is expected to find
+# assets/topviews/[lang]-topviews-2021.json
+# and a list of articles in articles.json
 languages:
   - eng
-    topviews: en-topviews-2021.json
+  - deu
+  - esp
+  - pol
+  - fra
+  - dut

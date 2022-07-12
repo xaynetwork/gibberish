@@ -19,38 +19,22 @@ final template = RegExp(r"\.[a-z-]+");
 extension on Language {
   String get project {
     switch (this) {
-      case Language.english:
+      case Language.eng:
         return 'en.wikipedia.org';
-      case Language.german:
+      case Language.deu:
         return 'de.wikipedia.org';
-      case Language.dutch:
+      case Language.dut:
         return 'nl.wikipedia.org';
-      case Language.french:
+      case Language.fre:
         return 'fr.wikipedia.org';
-      case Language.polish:
+      case Language.pol:
         return 'pl.wikipedia.org';
-
-      case Language.spanish:
+      case Language.esp:
         return 'es.wikipedia.org';
     }
   }
 
-  String get topviews {
-    switch (this) {
-      case Language.english:
-        return 'assets/topviews/en-topviews-2021.json';
-      case Language.german:
-        return 'assets/topviews/de-topviews-2021.json';
-      case Language.dutch:
-        return 'assets/topviews/nl-topviews-2021.json';
-      case Language.french:
-        return 'assets/topviews/fr-topviews-2021.json';
-      case Language.polish:
-        return 'assets/topviews/pl-topviews-2021.json';
-      case Language.spanish:
-        return 'assets/topviews/es-topviews-2021.json';
-    }
-  }
+  String get topviews => 'assets/topviews/${name}.json';
 }
 
 typedef GetArticle = Future<String?> Function(String title, Language language);
@@ -108,27 +92,17 @@ void main() async {
   await Future.wait(training());
 }
 
-List<Future> training() {
+Iterable<Future> training() {
   // createArticleBlob(Language.french, getArticleContent);
-  final gramSize = 3;
-  final dictSize = 750;
-  final res = [
-    generateDict(Language.english, 'en',
-        gramSize: gramSize, dictSize: dictSize),
-    generateDict(Language.german, 'de', gramSize: gramSize, dictSize: dictSize),
-    generateDict(Language.dutch, 'nl', gramSize: gramSize, dictSize: dictSize),
-    generateDict(Language.french, 'fr', gramSize: gramSize, dictSize: dictSize),
-    generateDict(Language.spanish, 'es',
-        gramSize: gramSize, dictSize: dictSize),
-    generateDict(Language.polish, 'pl', gramSize: gramSize, dictSize: dictSize),
-  ];
-  return res;
+
+  return Language.values
+      .map((e) => generateDict(e, gramSize: kGramSize, dictSize: kDictSize));
 }
 
-Future<void> generateDict(Language language, String twoLetter,
+Future<void> generateDict(Language language,
     {required int gramSize, int dictSize = 1000}) async {
   final raw = jsonDecode(
-      await File('assets/${language.name}_wikipedia_blob.json').readAsString());
+      await File('assets/blobs/${language.name}.json').readAsString());
   trainFromWikipedia(
     language,
     (title, lang) async => raw[title],
@@ -136,7 +110,7 @@ Future<void> generateDict(Language language, String twoLetter,
     dictSize: dictSize,
   ).then((value) => writeToFile(
         'const ${language.name}Dictionary = $value;',
-        'lib/results/$twoLetter.dart',
+        'lib/results/${language.name}.dart',
       ));
 }
 
@@ -194,8 +168,10 @@ Future<String> trainFromWikipedia(Language language, GetArticle getArticle,
   final words = Map.fromEntries(
       list.take(dictSize).map((e) => MapEntry(e.key, e.value / totalWords)));
 
-  final positives = jsonDecode(
-      await File('assets/articles.json').readAsString())[language.name] as Map;
+  final name = language.name;
+  final positives =
+      jsonDecode(await File('assets/positives/$name.json').readAsString())
+          as Map;
   final negatives =
       jsonDecode(await File('assets/gibberish.json').readAsString()) as Map;
 

@@ -1,5 +1,5 @@
-const spanishDictionary = {
-  "language": "spanish",
+const espDictionary = {
+  "language": "esp",
   "gramSize": 3,
   "maxDistanceScore": 0.0023268725517916196,
   "minChainedScore": 0.0011547508012092586,

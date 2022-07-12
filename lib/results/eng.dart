@@ -1,5 +1,5 @@
-const englishDictionary = {
-  "language": "english",
+const engDictionary = {
+  "language": "eng",
   "gramSize": 3,
   "maxDistanceScore": 0.018126817091257498,
   "minChainedScore": 0.001001562554229073,

@@ -1,5 +1,5 @@
-const frenchDictionary = {
-  "language": "french",
+const freDictionary = {
+  "language": "fre",
   "gramSize": 3,
   "maxDistanceScore": 0.0009539038347689476,
   "minChainedScore": 0.0014997412240582032,

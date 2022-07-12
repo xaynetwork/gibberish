@@ -1,5 +1,5 @@
-const germanDictionary = {
-  "language": "german",
+const deuDictionary = {
+  "language": "deu",
   "gramSize": 3,
   "maxDistanceScore": 0.00611044013644332,
   "minChainedScore": 0.0011267801374939446,
