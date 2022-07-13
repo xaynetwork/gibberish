@@ -39,7 +39,7 @@ String _clean(String value) {
     return '';
   }
   return value
-      .replaceAll(RegExp(r"[\u0021-\u0040„”’\[\]°…–²‚«»→]+"), ' ')
+      .replaceAll(RegExp(r"[\u0021-\u0040„”’\[\]°…–²‚«»→|​]+"), ' ')
       .replaceAll(RegExp(r"\s+"), ' ')
       .trim();
 }

@@ -1,8 +1,8 @@
 const dutDictionary = {
   "language": "dut",
   "gramSize": 3,
-  "maxDistanceScore": 0.0020053737441890805,
-  "minChainedScore": 0.0015837372453978897,
+  "maxDistanceScore": 0.002005374977743081,
+  "minChainedScore": 0.0015837378692261036,
   "words": {
     "en ": 0.02499303838530938,
     "de ": 0.0141468667443546,

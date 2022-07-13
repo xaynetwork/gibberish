@@ -1,8 +1,8 @@
 const engDictionary = {
   "language": "eng",
   "gramSize": 3,
-  "maxDistanceScore": 0.018126817091257498,
-  "minChainedScore": 0.001001562554229073,
+  "maxDistanceScore": 0.018126820153283856,
+  "minChainedScore": 0.0010015645780532512,
   "words": {
     " th": 0.014232859673688765,
     "he ": 0.012691102034825662,
